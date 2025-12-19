@@ -5,16 +5,24 @@ from dotenv import load_dotenv
 
 # 1. SETUP & CONFIGURATION
 def configure_genai():
-    """
-    Loads the API Key and configures the Gemini 3.0 Flash model.
-    """
-    load_dotenv() # Load key from .env file
-    api_key = os.getenv("GOOGLE_API_KEY")
+    api_key = None
     
+    # 1. Try fetching from Streamlit Cloud Secrets (The dictionary lookup)
+    try:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+    except:
+        pass
+
+    # 2. If not found, try local .env file
     if not api_key:
-        # Fallback for Hackathon (Delete before pushing to GitHub!)
-        api_key = "GOOGLE_API_KEY" 
-    
+        load_dotenv()
+        api_key = os.getenv("GOOGLE_API_KEY")
+
+    # 3. If still nothing, STOP and warn the user
+    if not api_key:
+        st.error("❌ API Key Missing! Go to 'Manage App' -> 'Secrets' on Streamlit Cloud and add it.")
+        st.stop()
+
     genai.configure(api_key=api_key)
     
     # Using the latest Gemini 3.0 Flash Preview for speed + multimodal
