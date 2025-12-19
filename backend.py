@@ -1,3 +1,4 @@
+import streamlit as st
 import google.generativeai as genai
 import PyPDF2
 import os
@@ -5,27 +6,19 @@ from dotenv import load_dotenv
 
 # 1. SETUP & CONFIGURATION
 def configure_genai():
-    api_key = None
-    
-    # 1. Try fetching from Streamlit Cloud Secrets (The dictionary lookup)
+    # 1. Try getting key from Streamlit Cloud Secrets (Production)
     try:
         api_key = st.secrets["GOOGLE_API_KEY"]
     except:
-        pass
-
-    # 2. If not found, try local .env file
-    if not api_key:
+        # 2. If that fails, try local .env (Development)
         load_dotenv()
         api_key = os.getenv("GOOGLE_API_KEY")
 
-    # 3. If still nothing, STOP and warn the user
     if not api_key:
-        st.error("❌ API Key Missing! Go to 'Manage App' -> 'Secrets' on Streamlit Cloud and add it.")
-        st.stop()
+        raise ValueError("No API Key found! Check Secrets or .env")
 
     genai.configure(api_key=api_key)
-    
-    # Using the latest Gemini 3.0 Flash Preview for speed + multimodal
+    # Use the Preview model
     model = genai.GenerativeModel('gemini-3-flash-preview')
     return model
 
